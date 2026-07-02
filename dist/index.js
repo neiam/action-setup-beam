@@ -38527,15 +38527,17 @@ function getRunnerOSVersion() {
 
       return deprecatedContainerFromEnvImageOS
     } else {
-      throw new Error(
-        "Tried to map a target OS from env. variable 'ImageOS' (got " +
-          `${process.env.ImageOS}` +
-          "), but failed. If you're using a " +
-          "self-hosted runner, you should set 'env': 'ImageOS': ... to one of the following: " +
-          "['" +
-          `${Object.keys(ImageOSToContainer).join("', '")}` +
-          "']",
+      // neiam fork: self-hosted forgejo/act runners derive ImageOS from the
+      // runs-on label (e.g. 'arcrunner-set') and overwrite any env we set,
+      // which upstream treats as fatal. Our runner's catthehacker act image
+      // is Ubuntu 24.04, so fall back to that instead of erroring. A valid
+      // ImageOS (mapped above) is still honoured.
+      warning(
+        `Unmappable ImageOS '${process.env.ImageOS}' on a self-hosted runner; ` +
+          'defaulting to ubuntu-24.04. Set a mappable env.ImageOS to override.',
       )
+
+      return 'ubuntu-24.04'
     }
   }
 
